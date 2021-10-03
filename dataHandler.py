@@ -1,5 +1,8 @@
 import requests
+import datetime
+from sgp4.api import Satrec, jday
 from requests.models import HTTPError
+from sgp4.model import Satellite
 
 
 def request_data(base_url, format_):
@@ -18,10 +21,21 @@ def request_data(base_url, format_):
         print('Done.')
 
 
-url = 'https://celestrak.com//NORAD/elements/gp.php'
+def process_data():
+    with open('data.txt', 'rt') as file:
+        lines = file.readlines()
+        lines = '\n'.join([line.strip() for line in lines if line.strip() != ''])
+        lines = lines.split('\n')
 
-# request_data(url, '3LE')
+        # names = [line for line in lines[:: 3]]
+        # row_1 = [line for line in lines[1::3]]
+        # row_2 = [line for line in lines[2::3]]
+        for i in range(0, len(lines), 3):
+            name, row1, row2 = lines[i : i+3]
 
-with open('data.txt', 'rt') as file:
-    lines = file.readlines()
-    print(lines)
+            satellite = Satrec.twoline2rv(row1, row2)
+            jd, fr = jday(2021, 10, 3, 9, 56, 30)
+            e, r, v = satellite.sgp4(jd, fr)
+            print(e,r,v)
+
+
